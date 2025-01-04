@@ -9,6 +9,7 @@ from aiogram.filters.command import Command
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 
+from constants import hi_messages, default_lang
 from db_utils import bd, get_value_from_id, enter_bd_request, write_value_from_id, add_user
 
 
@@ -19,32 +20,50 @@ dp = Dispatcher()  # Диспетчер
 bot = Bot(token="7268025850:AAFvr8SgHLO929ESpSsPnaLlfwzjaEbn2fQ")
 
 
+@dp.callback_query(F.data.startswith("send-hi-mess-on"))
+async def sending_hi_mess(callback: types.CallbackQuery):
+    _, lang = callback.data.split("_")
+    await send_hi_mess(lang, callback.message)
+
+    await callback.answer()
+
+
+async def send_hi_mess(curr_lang: str, message: types.Message):
+    kb = []
+
+    for q in hi_messages.items():
+        lang, to_lang = q[0], q[1]["to_lang"]
+        if lang != curr_lang:
+            kb.append([types.InlineKeyboardButton(text=to_lang, callback_data="send-hi-mess-on_" + lang)])
+
+    keyboard = types.InlineKeyboardMarkup(
+        inline_keyboard=kb,
+    )
+    await message.answer(hi_messages[curr_lang]["mess"], reply_markup=keyboard)
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     if await get_value_from_id(message.from_user.id) is None:
-        for q in await get_value_from_id(0, get_all=True):
-            user_id, enable, name = q
-            if enable != 0:
-                await bot.send_message(user_id, "ВНИМАНИЕ!!!!!\nКороче. Если вы это видите - не отправляйте фотки, кто-то посторонний подключился к боту, мне было лень делать защиту от этого. Позвоните Артёму, он починит.")
         await add_user(message.from_user.id)
-        data = await write_value_from_id(message.from_user.id, "isenable", 1)
-        await message.answer("Создание записи. Ответ БД: " + str(data))
-        await message.answer("Введите имя (фото от ....):")
+        await write_value_from_id(message.from_user.id, "isenable", 1)
+        await message.answer("Запись создана. Приятного пользования!")
     else:
         await message.answer("Запись уже создана")
-        kb = [
-            [
-                types.InlineKeyboardButton(text="Отключить сообщения",
-                                           callback_data="set-off_mess_" + str(message.from_user.id)),
-        ], [
-                types.InlineKeyboardButton(text="Включить сообщения",
-                                           callback_data="set-on_mess_" + str(message.from_user.id)),
-            ]
-        ]
-        keyboard = types.InlineKeyboardMarkup(
-            inline_keyboard=kb,
-        )
-        await message.answer("Кнопочки:", reply_markup=keyboard)
+        # kb = [
+        #     [
+        #         types.InlineKeyboardButton(text="Отключить сообщения",
+        #                                    callback_data="set-off_mess_" + str(message.from_user.id)),
+        # ], [
+        #         types.InlineKeyboardButton(text="Включить сообщения",
+        #                                    callback_data="set-on_mess_" + str(message.from_user.id)),
+        #     ]
+        # ]
+        # keyboard = types.InlineKeyboardMarkup(
+        #     inline_keyboard=kb,
+        # )
+        # await message.answer("Кнопочки:", reply_markup=keyboard)
+    await send_hi_mess(default_lang, message)
 
 
 async def main(bot_lc1):  # Запуск процесса поллинга новых апдейтов
