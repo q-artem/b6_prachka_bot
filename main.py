@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from aiogram import F
 from aiogram.fsm.context import FSMContext
+import re
 
 from constants import hi_messages, default_lang
 from db_utils import bd, get_value_from_id, enter_bd_request, write_value_from_id, add_user
@@ -65,6 +66,19 @@ async def cmd_start(message: types.Message):
         # await message.answer("Кнопочки:", reply_markup=keyboard)
     await send_hi_mess(default_lang, message)
 
+
+async def get_numbers(data: str) -> list[int]:
+    _out = []
+    for q in re.finditer(r"\d+", data):
+        _out.append(int(q.string))
+    cache = set(_out)
+    out = []
+    for q in _out:
+        if q not in cache:
+            out.append(q)
+            cache.add(q)
+
+    return out
 
 async def main(bot_lc1):  # Запуск процесса поллинга новых апдейтов
     await dp.start_polling(bot_lc1)
