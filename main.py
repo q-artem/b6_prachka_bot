@@ -94,7 +94,7 @@ async def delete_box(callback: types.CallbackQuery):
 
 
 
-async def send_current_queue(curr_id: int, queue: list[int], now_added:list[int]=None):
+async def send_current_queue(curr_id, queue, now_added=None):
     lang = await get_value_from_id(curr_id, fields="language")
 
     if len(queue) == 0:
@@ -218,7 +218,7 @@ async def get_numbers(message: types.Message):
     return list(map(int, (await get_value_from_id(message.from_user.id, fields="boxes")).split()))
 
 
-async def write_numbers(message: types.Message, added_numbers: list[int]):
+async def write_numbers(message: types.Message, added_numbers):
     lang = await get_value_from_id(message.from_user.id, fields="language")
     numbers = await get_numbers(message) + added_numbers
     if len(numbers) > 100:
@@ -234,7 +234,7 @@ async def write_numbers(message: types.Message, added_numbers: list[int]):
     await write_value_from_id(message.from_user.id, "boxes", " ".join(out))
 
 
-async def text_to_numbers(data: str) -> list[int]:
+async def text_to_numbers(data: str):
     _out = []
     for q in re.findall(r"\d+", data):
         _out.append(int(q))
