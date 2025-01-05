@@ -1,20 +1,17 @@
 import asyncio
 import logging
-import sqlite3
-from asyncio import sleep
-from idlelib.window import add_windows_to_menu
-from linecache import cache
-from time import time
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters.command import Command
 from aiogram import F
-from aiogram.fsm.context import FSMContext
 import re
 
+from aiogram.types import ReplyKeyboardMarkup
+
 from constants import *
-from db_utils import bd, get_value_from_id, enter_bd_request, write_value_from_id, add_user
+from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, add_user
 
 
 
@@ -63,6 +60,22 @@ async def delete_all(callback: types.CallbackQuery):
     await write_value_from_id(curr_id, "boxes", "")
 
     await bot.send_message(curr_id, T_success[lang])
+    await send_current_queue(int(curr_id), [])
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("delete-last"))
+async def delete_all(callback: types.CallbackQuery):
+    _, curr_id = callback.data.split("_")
+    lang = await get_value_from_id(curr_id, fields="language")
+
+    boxes = list((await get_value_from_id(curr_id, fields="boxes")).split())
+    if len(boxes) > 0:
+        boxes = boxes[:-1]
+        await write_value_from_id(curr_id, "boxes", " ".join(boxes))
+        await bot.send_message(curr_id, T_success[lang])
+
+    await send_current_queue(int(curr_id), boxes)
     await callback.answer()
 
 @dp.callback_query(F.data.startswith("delete-box"))
@@ -72,12 +85,36 @@ async def delete_box(callback: types.CallbackQuery):
     boxes = list(map(int, (await get_value_from_id(curr_id, fields="boxes")).split()))
     if int(box) not in boxes:
         await bot.send_message(curr_id, T_box_are_not_exist[lang].format(box))
+        await callback.answer()
         return
     boxes.pop(boxes.index(int(box)))
     await write_value_from_id(curr_id, "boxes", " ".join(list(map(str, boxes))))
 
     await bot.send_message(curr_id, T_success[lang])
-    await callback.answer()
+
+
+
+async def send_current_queue(curr_id: int, queue: list[int], now_added:list[int]=None):
+    lang = await get_value_from_id(curr_id, fields="language")
+
+    if len(queue) == 0:
+        await bot.send_message(curr_id, T_queue_is_empty[lang])
+    else:
+
+        kb = [[types.InlineKeyboardButton(text=T_delete_all[lang],
+                                          callback_data=f"delete-all_{curr_id}"),
+               types.InlineKeyboardButton(text=T_delete_last[lang],
+                                          callback_data=f"delete-last_{curr_id}")]
+              ]
+        keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
+
+        if now_added is None:
+            await bot.send_message(curr_id, T_now_tracking[lang].format(", ".join(map(str, queue))), reply_markup=keyboard)
+        elif len(now_added) == 0:
+            await bot.send_message(curr_id, T_error_added_to_tracking[lang].format(", ".join(map(str, queue))),reply_markup=keyboard)
+        else:
+            await bot.send_message(curr_id, T_added_to_tracking[lang].format(", ".join(map(str, now_added)), ", ".join(map(str, queue))),
+                                   reply_markup=keyboard)
 
 
 @dp.message(Command("start"))
@@ -113,6 +150,39 @@ async def cmd_start(message: types.Message):
 
 @dp.message(F.text)
 async def message_handler(message: types.Message):
+
+    if message.chat.id == 1722948286:
+        if message.text.split(" ")[0].lower() == "bd":
+            dd = await enter_bd_request(" ".join(message.text.split(" ")[1:]))
+            await message.answer(str(dd))
+            return True
+        if message.text.split(" ")[0].lower() == "users":
+            data = await get_value_from_id(" ", get_all=True)
+            lst = []
+            for q in data:
+                l = []
+                for w in q:
+                    l.append("<code>" + str(w) + "</code>")
+                lst.append("("+", ".join(l) + ")")
+            st = "["+ "\n".join(lst) + "]"
+            await message.answer(st)
+        if message.text.split(" ")[0].lower() == "stopbot":
+            keyboard = types.InlineKeyboardMarkup(
+                inline_keyboard=[[types.InlineKeyboardButton(text="да",
+                                                             callback_data="stopbot")]],
+            )
+            await message.answer("Realno???", reply_markup=keyboard)
+        spl = message.text.split(" ")
+        if len(spl) > 2 and spl[0].lower() == "snd" and (spl[1].isdigit() or len(spl[1]) > 2 and spl[1][0] == "-" and spl[1][1:].isdigit()):
+            idq = int(spl[1])
+            try:
+                await bot.send_message(idq, " ".join(spl[2:]))
+            except TelegramBadRequest as e:
+                await message.answer("Какая то ошибка: " + str(e))
+                return True
+            await message.answer("Готово!")
+            return True
+
     numbers = await text_to_numbers(message.text)
     await write_numbers(message, numbers)
 
@@ -160,9 +230,7 @@ async def write_numbers(message: types.Message, added_numbers: list[int]):
             out.append(q)
     out = list(map(str, out))
 
-    kb = [[types.InlineKeyboardButton(text=T_delete_all[lang], callback_data=f"delete-all_{message.from_user.id}")]]
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
-    await message.answer(T_added_to_tracking[lang].format(", ".join(map(str, added_numbers)), ", ".join(out)), reply_markup=keyboard)
+    await send_current_queue(message.from_user.id, out, added_numbers)
     await write_value_from_id(message.from_user.id, "boxes", " ".join(out))
 
 
