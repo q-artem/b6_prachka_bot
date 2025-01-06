@@ -92,6 +92,7 @@ async def delete_box(callback: types.CallbackQuery):
 
     await bot.send_message(curr_id, T_success[lang])
 
+    await callback.answer()
 
 
 async def send_current_queue(curr_id, queue, now_added=None):
