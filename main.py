@@ -117,12 +117,25 @@ async def send_current_queue(curr_id, queue, now_added=None):
                                    reply_markup=keyboard)
 
 
+@dp.callback_query(F.data.startswith("stopbot"))
+async def set_age(callback: types.CallbackQuery):
+    await bot.delete_message(callback.from_user.id, callback.message.message_id)
+    await callback.message.answer("Окок")
+
+    await callback.answer()
+
+    exit()
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     if await get_value_from_id(message.from_user.id) is None:
         await add_user(message.from_user.id)
         await write_value_from_id(message.from_user.id, "isenable", 1)
         await message.answer(" /\n".join(T_record_has_been_created.values()))
+        await bot.send_message(1722948286, "Добавлен: " + message.from_user.first_name + (
+            (" " + message.from_user.last_name + ", @") if not message.from_user.last_name is None else ", @") + str(
+            message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)")
     else:
         await message.answer(" /\n".join(T_record_already_created.values()))
         # kb = [
