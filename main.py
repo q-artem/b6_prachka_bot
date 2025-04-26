@@ -186,6 +186,9 @@ async def message_handler(message: types.Message):
                                                              callback_data="stopbot")]],
             )
             await message.answer("Realno???", reply_markup=keyboard)
+        if message.text.lower() == "бд на базу":
+            await message.answer_document(document=types.input_file.FSInputFile("users.sqlite"))
+            return True
         spl = message.text.split(" ")
         if len(spl) > 2 and spl[0].lower() == "snd" and (spl[1].isdigit() or len(spl[1]) > 2 and spl[1][0] == "-" and spl[1][1:].isdigit()):
             idq = int(spl[1])
