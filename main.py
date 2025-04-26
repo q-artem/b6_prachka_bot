@@ -16,7 +16,7 @@ from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, a
 
 
 
-logging.basicConfig(level=logging.INFO)  # Включаем логирование, чтобы не пропустить важные сообщения
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")  # Включаем логирование, чтобы не пропустить важные сообщения
 dp = Dispatcher()  # Диспетчер
 bot = Bot(token="7780365472:AAGed4EVuWqsNF0eDzusnuwc7mBRehqbrDg", default=DefaultBotProperties(parse_mode='html'))
 
