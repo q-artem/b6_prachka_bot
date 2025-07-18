@@ -1,24 +1,32 @@
 import asyncio
 import logging
+import os
+from calendar import prcal, prweek, month
+from traceback import print_exception
+from venv import logger
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ContentType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters.command import Command
 from aiogram import F
 import re
 
-from aiogram.types import ReplyKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, FSInputFile
 
 from constants import *
 from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, add_user
+from mail import send_report_to_mail
 
-
-
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")  # Включаем логирование, чтобы не пропустить важные сообщения
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s %(message)s")  # Включаем логирование, чтобы не пропустить важные сообщения
 dp = Dispatcher()  # Диспетчер
-bot = Bot(token="7780365472:AAGed4EVuWqsNF0eDzusnuwc7mBRehqbrDg", default=DefaultBotProperties(parse_mode='html'))
+bot = Bot(token="1915599154:AAGHvs8tLqOY_gSIymWjzMjk0ooMeM2lbLk", default=DefaultBotProperties(parse_mode='html'))
+
+all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'documents')
+
+file_ids: dict[int, list[(str, str)]] = dict()
 
 
 @dp.callback_query(F.data.startswith("send-hi-mess-on"))
@@ -52,6 +60,7 @@ async def select_language(callback: types.CallbackQuery):
     await send_hi_mess(lang, callback.message)
     await callback.answer()
 
+
 @dp.callback_query(F.data.startswith("delete-all"))
 async def delete_all(callback: types.CallbackQuery):
     _, curr_id = callback.data.split("_")
@@ -77,6 +86,7 @@ async def delete_all(callback: types.CallbackQuery):
 
     await send_current_queue(int(curr_id), boxes)
     await callback.answer()
+
 
 @dp.callback_query(F.data.startswith("delete-box"))
 async def delete_box(callback: types.CallbackQuery):
@@ -110,11 +120,14 @@ async def send_current_queue(curr_id, queue, now_added=None):
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
         if now_added is None:
-            await bot.send_message(curr_id, T_now_tracking[lang].format(", ".join(map(str, queue))), reply_markup=keyboard)
+            await bot.send_message(curr_id, T_now_tracking[lang].format(", ".join(map(str, queue))),
+                                   reply_markup=keyboard)
         elif len(now_added) == 0:
-            await bot.send_message(curr_id, T_error_added_to_tracking[lang].format(", ".join(map(str, queue))),reply_markup=keyboard)
+            await bot.send_message(curr_id, T_error_added_to_tracking[lang].format(", ".join(map(str, queue))),
+                                   reply_markup=keyboard)
         else:
-            await bot.send_message(curr_id, T_added_to_tracking[lang].format(", ".join(map(str, now_added)), ", ".join(map(str, queue))),
+            await bot.send_message(curr_id, T_added_to_tracking[lang].format(", ".join(map(str, now_added)),
+                                                                             ", ".join(map(str, queue))),
                                    reply_markup=keyboard)
 
 
@@ -162,9 +175,66 @@ async def cmd_start(message: types.Message):
     await message.answer(" /\n".join(T_select_language.values()), reply_markup=keyboard)
 
 
+@dp.message(F.document)
+async def document_handler(message: types.Message):
+    print(message.document)
+    lang = await get_value_from_id(message.from_user.id, fields="language")
+    if ("." not in message.document.file_name) or message.document.file_name.split(".")[-1].lower() not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "xls", "xlsx", "csv", "ppt", "txt", "rtf", "tiff"]:
+        await incorrect_data_handler(message)
+        return False
+    if message.document.file_size > 1024 * 1024 * 100:
+        await message.answer(T_exceeding_file_size[lang])
+        return False
+
+    if message.from_user.id not in file_ids.keys():
+        file_ids[message.from_user.id] = []
+    file_ids[message.from_user.id].append((message.document.file_name, message.document.file_id))
+
+    if len(file_ids[message.from_user.id]) > 10:
+        await message.answer(T_cant_add_more_files[lang])
+        file_ids[message.from_user.id].pop(-1)
+        return False
+
+    await send_message_about_added_file(message)
+
+    print(message.document.file_id)
+    file = await bot.get_file(message.document.file_id)
+    file_path = file.file_path
+    print("---", file_path)
+    file_name = message.document.file_name
+    await bot.download_file(file_path, os.path.join(all_media_dir, file_name))
+    await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, file_name)))
+    await send_report_to_mail([], os.path.join(all_media_dir, file_name), file_name)
+    os.remove(os.path.join(all_media_dir, file_name))
+
+
+@dp.message(F.photo)
+async def photo_handler(message: types.Message):
+    print(message.photo)
+    await message.answer("12")
+
+    file = await bot.get_file(message.photo[-1].file_id)
+    file_path = file.file_path
+    print(file_path)
+    photo_name = message.photo[-1].file_id + ".jpg"
+    await bot.download_file(file_path, os.path.join(all_media_dir, photo_name))
+    await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, photo_name)))
+    await send_report_to_mail([], os.path.join(all_media_dir, photo_name), photo_name)
+    os.remove(os.path.join(all_media_dir, photo_name))
+
+
+async def send_message_about_added_file(message: types.Message):
+    pass
+
+
+@dp.message(F.video | F.audio | F.animation | F.location | F.sticker | F.contact | F.poll | F.voice)
+async def incorrect_data_handler(message: types.Message):
+    lang = await get_value_from_id(message.from_user.id, fields="language")
+    await message.answer(T_incorrect_data[lang])
+
+
 @dp.message(F.text)
 async def message_handler(message: types.Message):
-
     if message.chat.id == 1722948286:
         if message.text.split(" ")[0].lower() == "bd":
             dd = await enter_bd_request(" ".join(message.text.split(" ")[1:]))
@@ -177,8 +247,8 @@ async def message_handler(message: types.Message):
                 l = []
                 for w in q:
                     l.append("<code>" + str(w) + "</code>")
-                lst.append("("+", ".join(l) + ")")
-            st = "["+ "\n".join(lst) + "]"
+                lst.append("(" + ", ".join(l) + ")")
+            st = "[" + "\n".join(lst) + "]"
             await message.answer(st)
         if message.text.split(" ")[0].lower() == "stopbot":
             keyboard = types.InlineKeyboardMarkup(
@@ -190,7 +260,8 @@ async def message_handler(message: types.Message):
             await message.answer_document(document=types.input_file.FSInputFile("users.sqlite"))
             return True
         spl = message.text.split(" ")
-        if len(spl) > 2 and spl[0].lower() == "snd" and (spl[1].isdigit() or len(spl[1]) > 2 and spl[1][0] == "-" and spl[1][1:].isdigit()):
+        if len(spl) > 2 and spl[0].lower() == "snd" and (
+                spl[1].isdigit() or len(spl[1]) > 2 and spl[1][0] == "-" and spl[1][1:].isdigit()):
             idq = int(spl[1])
             try:
                 await bot.send_message(idq, " ".join(spl[2:]))
@@ -216,19 +287,21 @@ async def channel_message(message: types.MessageOriginChannel):
         for w in finding_boxes:
             if w in numbers:
                 if if_ready:
-                    await bot.send_message(curr_id, T_box_ready[curr_lang].format(w, link_to_channel + str(message.message_id)))
+                    await bot.send_message(curr_id,
+                                           T_box_ready[curr_lang].format(w, link_to_channel + str(message.message_id)))
                     numbers.pop(numbers.index(w))
                     rewrite_bd = True
                 else:
-                    kb = [[types.InlineKeyboardButton(text=T_manually_delete_box[curr_lang].format(w), callback_data=f"delete-box_{curr_id}_{w}")]]
+                    kb = [[types.InlineKeyboardButton(text=T_manually_delete_box[curr_lang].format(w),
+                                                      callback_data=f"delete-box_{curr_id}_{w}")]]
                     keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
 
-                    await bot.send_message(curr_id, T_box_maybe_ready[curr_lang].format(w, link_to_channel + str(message.message_id)), reply_markup=keyboard)
+                    await bot.send_message(curr_id, T_box_maybe_ready[curr_lang].format(w, link_to_channel + str(
+                        message.message_id)), reply_markup=keyboard)
                     # await bot.forward_message(curr_id, message.chat.id, message.message_id)
 
         if rewrite_bd:
             await write_value_from_id(curr_id, "boxes", " ".join(list(map(str, numbers))))
-
 
 
 async def get_numbers(message: types.Message):
@@ -267,7 +340,17 @@ async def text_to_numbers(data: str):
             out1.append(q)
     return out1
 
+
 async def main(_bot):  # Запуск процесса поллинга новых апдейтов
     await dp.start_polling(_bot)
 
-asyncio.run(main(bot))
+def start_bot():
+    if os.listdir("documents"):
+        logger.info("Deleting old files...")
+        for q in os.listdir("documents"):
+            os.remove(os.path.join(all_media_dir, q))
+        logger.info("All old files deleted")
+
+    asyncio.run(main(bot))
+
+start_bot()

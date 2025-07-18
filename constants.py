@@ -54,6 +54,15 @@ T_delete_all = {"ru": "Удалить все",
 T_delete_last = {"ru": "Удалить последний",
                  "en": "Delete the last box"}
 
+T_incorrect_data = {"ru": "Отправленный тип файла не поддерживается. Отправьте чек в формате фото или файлом",
+                    "en": "The sent file type is not supported. Send a check as a photo or as a file"}
+
+T_exceeding_file_size = {"ru": "Размер файла не может превышать 100 МБ",
+                         "en": "File size cannot exceed 100 MB",}
+
+T_cant_add_more_files = {"ru": "Нельзя добавить больше 10 файлов к письму",
+                         "en": "You can't add more than 10 files to the letter"}
+
 T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot!\nЕсли что, он нужен для удобного отслеживания "
                                 "Ваших стирок. Для добавления к отслеживанию одного или нескольких контейнеров, "
                                 "отправьте сообщение с их номерами, разделёнными любыми символами (не числа). \nКогда "
