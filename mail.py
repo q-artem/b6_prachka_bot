@@ -1,10 +1,7 @@
-import smtplib
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email import encoders
-from os import remove
-import time
 from aiofiles import open as aopen
 import aiosmtplib
 
@@ -12,6 +9,7 @@ from aiogram import types
 from aiogram.client.session.middlewares.request_logging import logger
 
 from constants import T_login_to_server, T_sending_letter
+from datetime import datetime, timezone, timedelta
 
 
 async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_names: list[str], status: types.Message, lang: str, user: types.User):
@@ -22,10 +20,11 @@ async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_na
     username = "b6prachkabot@mail.ru"
     password = "8Qvr7NwpluJc2vxuA1hd"
 
+    time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=3)))
     msg = MIMEMultipart()
-    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, "Чек " + time.strftime("%H:%M:%S", time.localtime(time.time() + 3 * 3600)) + " Боксы: " + ", ".join(boxes[:10])
+    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, "Чек " + time.strftime("%H:%M:%S") + "    Боксы: " + ", ".join(boxes[:10]) + ("..." if len(boxes) > 10 else "")
     text = ""
-    hour = time.localtime(time.time() + 3 * 3600).tm_hour
+    hour = time.hour
     if 5 <= hour < 12:
         text += "Доброе утро"
     elif 12 <= hour < 17:
@@ -39,7 +38,7 @@ async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_na
     if not user.username is None:
         text += "Ссылка на профиль в telegram: https://t.me/" + user.username + "\n"
     text += "ID пользователя: " + str(user.id) + "\n"
-    text += "Список боксов: " + ", ".join(boxes[:10]) + "\n\n\n"
+    text += "Список боксов: " + ", ".join(boxes) + "\n\n\n"
     text += "По вопросам работы бота обращайтесь к @j_artem в telegram."
     msg.attach(MIMEText(text, 'plain'))
 

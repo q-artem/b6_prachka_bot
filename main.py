@@ -1,22 +1,18 @@
 import asyncio
 import logging
 import os
-from calendar import prcal, prweek, month, error
-from traceback import print_exception
 from venv import logger
 
-from six import raise_from
 from transliterate import translit
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ContentType
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters.command import Command
 from aiogram import F
 import re
 
-from aiogram.types import ReplyKeyboardMarkup, FSInputFile
+from aiogram.types import FSInputFile
 
 from constants import *
 from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, add_user
