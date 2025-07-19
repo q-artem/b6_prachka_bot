@@ -57,11 +57,47 @@ T_delete_last = {"ru": "Удалить последний",
 T_incorrect_data = {"ru": "Отправленный тип файла не поддерживается. Отправьте чек в формате фото или файлом",
                     "en": "The sent file type is not supported. Send a check as a photo or as a file"}
 
-T_exceeding_file_size = {"ru": "Размер файла не может превышать 100 МБ",
-                         "en": "File size cannot exceed 100 MB",}
+T_exceeding_file_size = {"ru": "Размер файла не может превышать 5 МБ",
+                         "en": "File size cannot exceed 5 MB",}
 
 T_cant_add_more_files = {"ru": "Нельзя добавить больше 10 файлов к письму",
                          "en": "You can't add more than 10 files to the letter"}
+
+T_added_new_file = {"ru": "Добавлен новый файл.",
+                    "en": "Added a new file."}
+
+T_current_list_to_send = {"ru": "Текущий список к отправке:",
+                          "en": "Current list to send:"}
+
+T_boxes = {"ru": "Боксы:",
+           "en": "Boxes:"}
+
+T_no_tracking_boxes = {"ru": "Нет отслеживаемых боксов",
+                       "en": "No tracking boxes"}
+
+T_files = {"ru": "Файлы:",
+           "en": "Files:"}
+
+T_to_send_or_delete = {"ru": "Для удаления файла или отправки письма на почту нажмите кнопку",
+                       "en": "To delete a file or send a letter to the mail, click the button"}
+
+T_send = {"ru": "Отправить",
+          "en": "Send"}
+
+T_delete_all_files = {"ru": "Удалить все файлы",
+                      "en": "Delete all files"}
+
+T_delete_file = {"ru": "Удалить файл",
+                 "en": "Delete file"}
+
+T_file_deleted = {"ru": "Файл удалён",
+                  "en": "File deleted"}
+
+T_all_files_have_been_deleted = {"ru": "Все файлы были удалены. Отправьте новый файл с чеком чтобы сформировать письмо",
+                                 "en": "All files have been deleted. Send a new file with a check to form a letter"}
+
+T_file_with_number_has_been_deleted = {"ru": "Файл с номером {} был удалён.",
+                                       "en": "The file with the number {} was deleted."}
 
 T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot!\nЕсли что, он нужен для удобного отслеживания "
                                 "Ваших стирок. Для добавления к отслеживанию одного или нескольких контейнеров, "

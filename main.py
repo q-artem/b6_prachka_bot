@@ -1,9 +1,12 @@
 import asyncio
 import logging
 import os
-from calendar import prcal, prweek, month
+from calendar import prcal, prweek, month, error
 from traceback import print_exception
 from venv import logger
+
+from six import raise_from
+from transliterate import translit
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.client.default import DefaultBotProperties
@@ -177,34 +180,37 @@ async def cmd_start(message: types.Message):
 
 @dp.message(F.document)
 async def document_handler(message: types.Message):
-    print(message.document)
     lang = await get_value_from_id(message.from_user.id, fields="language")
     if ("." not in message.document.file_name) or message.document.file_name.split(".")[-1].lower() not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "xls", "xlsx", "csv", "ppt", "txt", "rtf", "tiff"]:
         await incorrect_data_handler(message)
         return False
-    if message.document.file_size > 1024 * 1024 * 100:
+    if message.document.file_size > 1024 * 1024 * 5:
         await message.answer(T_exceeding_file_size[lang])
         return False
 
+    file_name = translit(message.document.file_name, 'ru', reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
+
     if message.from_user.id not in file_ids.keys():
         file_ids[message.from_user.id] = []
-    file_ids[message.from_user.id].append((message.document.file_name, message.document.file_id))
 
-    if len(file_ids[message.from_user.id]) > 10:
-        await message.answer(T_cant_add_more_files[lang])
-        file_ids[message.from_user.id].pop(-1)
-        return False
+    error_adding_file = False
+    if len(file_ids[message.from_user.id]) < 10:
+        file_ids[message.from_user.id].append((file_name, message.document.file_id))
+        logger.info("Added file: " + message.document.file_id + ", User: " + str(message.from_user.id))
+    else:
+        error_adding_file = True
+        logger.info("Error adding file: " + message.document.file_id + ", User: " + str(message.from_user.id))
 
-    await send_message_about_added_file(message)
+    await send_message_about_added_file(message.from_user.id, error_adding_file=error_adding_file)
 
-    print(message.document.file_id)
     file = await bot.get_file(message.document.file_id)
     file_path = file.file_path
+
     print("---", file_path)
-    file_name = message.document.file_name
+
     await bot.download_file(file_path, os.path.join(all_media_dir, file_name))
     await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, file_name)))
-    await send_report_to_mail([], os.path.join(all_media_dir, file_name), file_name)
+    # await send_report_to_mail([], os.path.join(all_media_dir, file_name), file_name)
     os.remove(os.path.join(all_media_dir, file_name))
 
 
@@ -216,15 +222,71 @@ async def photo_handler(message: types.Message):
     file = await bot.get_file(message.photo[-1].file_id)
     file_path = file.file_path
     print(file_path)
-    photo_name = message.photo[-1].file_id + ".jpg"
+    photo_name = translit(message.photo[-1].file_id + ".jpg", 'ru', reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
+
     await bot.download_file(file_path, os.path.join(all_media_dir, photo_name))
     await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, photo_name)))
     await send_report_to_mail([], os.path.join(all_media_dir, photo_name), photo_name)
     os.remove(os.path.join(all_media_dir, photo_name))
 
 
-async def send_message_about_added_file(message: types.Message):
-    pass
+async def send_message_about_added_file(user_id: int, error_adding_file: bool = False, deleted_file_on_number: bool = False, file_number: int = 0):
+    lang = await get_value_from_id(user_id, fields="language")
+
+    msg = ""
+    if error_adding_file:
+        msg += T_cant_add_more_files[lang]
+    elif deleted_file_on_number:
+        msg += T_file_with_number_has_been_deleted[lang].format(file_number)
+    else:
+        msg += T_added_new_file[lang]
+    msg += "\n\n" + T_current_list_to_send[lang]
+    msg += "\n" + T_boxes[lang] + " "
+    boxes = (await get_value_from_id(user_id, fields="boxes")).split()       # список
+    if not boxes:
+        msg += f"<i>{T_no_tracking_boxes[lang]}</i>\n"
+    else:
+        msg += " ".join(boxes) + "\n"
+    msg += T_files[lang] + "\n"
+    for q in range(len(file_ids[user_id])):
+        msg += str(q + 1) + ") " + file_ids[user_id][q][0] + "\n"
+
+    msg += "\n<i>" + T_to_send_or_delete[lang] + "</i>"
+
+    col_files = len(file_ids[user_id])
+
+    keyboard = types.InlineKeyboardMarkup(
+        inline_keyboard=[[types.InlineKeyboardButton(text=T_send[lang],
+                                                     callback_data="send-letter"),
+                         types.InlineKeyboardButton(text=T_delete_all_files[lang],
+                                                    callback_data="delete-files-all")],
+                         [types.InlineKeyboardButton(text=((T_delete_file[lang] + " ") if col_files < 3 else "") + str(q+1),
+                                                    callback_data="delete-file-on-number_" + str(q+1)) for q in range(0, min(5, col_files))],
+                         [types.InlineKeyboardButton(text=((T_delete_file[lang] + " ") if col_files - 5 < 3 else "") + str(q+1),
+                                                     callback_data="delete-file-on-number_" + str(q+1)) for q in range(5, min(10, col_files))]
+                         ],
+    )
+
+    await bot.send_message(user_id, msg, reply_markup=keyboard)
+
+
+@dp.callback_query(F.data.startswith("delete-file-on-number"))
+async def delete_file_on_number(callback: types.CallbackQuery):
+    file_number = int(callback.data.split("_")[1])
+    file_ids[callback.from_user.id].pop(file_number - 1)
+    if len(file_ids[callback.from_user.id]) == 0:
+        await delete_all_files(callback)
+    else:
+        await send_message_about_added_file(callback.from_user.id, deleted_file_on_number=True, file_number=file_number)
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("delete-files-all"))
+async def delete_all_files(callback: types.CallbackQuery):
+    lang = await get_value_from_id(callback.from_user.id, fields="language")
+    file_ids[callback.from_user.id] = []
+    await callback.message.answer(T_all_files_have_been_deleted[lang])
+    await callback.answer()
 
 
 @dp.message(F.video | F.audio | F.animation | F.location | F.sticker | F.contact | F.poll | F.voice)

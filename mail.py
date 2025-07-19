@@ -4,6 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email import encoders
 from os import remove
+import time
 
 from aiogram import types
 
@@ -15,13 +16,13 @@ async def send_report_to_mail(boxes: list[int], file_path: str, file_name: str):
     smtp_server = "smtp.mail.ru"
     port = 465
     username = "b6prachkabot@mail.ru"
-    password = "R1spgKhaPPqWHxaeeiSY"
+    password = "8Qvr7NwpluJc2vxuA1hd"
 
     msg = MIMEMultipart()
-    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, "Тестовая ТЕма1"
+    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, str(time.strftime("%Y-%m-%d %H:%M:%S"))
     msg.attach(MIMEText("Содержимое письма", 'plain'))
 
-    for q in range(1):
+    for q in range(10):
 
         with open(file_path, "rb") as file:
             part = MIMEBase('application', 'octet-stream')
