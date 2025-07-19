@@ -150,21 +150,8 @@ async def cmd_start(message: types.Message):
             message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)")
     else:
         await message.answer(" /\n".join(T_record_already_created.values()))
-        # kb = [
-        #     [
-        #         types.InlineKeyboardButton(text="Отключить сообщения",
-        #                                    callback_data="set-off_mess_" + str(message.from_user.id)),
-        # ], [
-        #         types.InlineKeyboardButton(text="Включить сообщения",
-        #                                    callback_data="set-on_mess_" + str(message.from_user.id)),
-        #     ]
-        # ]
-        # keyboard = types.InlineKeyboardMarkup(
-        #     inline_keyboard=kb,
-        # )
-        # await message.answer("Кнопочки:", reply_markup=keyboard)
-    kb = []
 
+    kb = []
     for q in T_languages.items():
         key, value = q
         kb.append([types.InlineKeyboardButton(text=value, callback_data="select-language_" + key)])
@@ -204,18 +191,22 @@ async def document_handler(message: types.Message):
 @dp.message(F.photo)
 async def photo_handler(message: types.Message):
     print(message.photo)
-    await message.answer("12")
 
-    file = await bot.get_file(message.photo[-1].file_id)
-    file_path = file.file_path
-    print(file_path)
-    photo_name = translit(message.photo[-1].file_id + ".jpg", 'ru',
+    photo_name = translit(message.photo[-1].file_unique_id + ".jpg", 'ru',
                           reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
 
-    await bot.download_file(file_path, os.path.join(all_media_dir, photo_name))
-    await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, photo_name)))
-    await send_report_to_mail([], os.path.join(all_media_dir, photo_name), photo_name)
-    os.remove(os.path.join(all_media_dir, photo_name))
+    if message.from_user.id not in file_ids.keys():
+        file_ids[message.from_user.id] = []
+
+    error_adding_file = False
+    if len(file_ids[message.from_user.id]) < 10:
+        file_ids[message.from_user.id].append((photo_name, message.photo[-1].file_id))
+        logger.info("Added photo: " + message.photo[-1].file_id + ", User: " + str(message.from_user.id))
+    else:
+        error_adding_file = True
+        logger.info("Error adding file: " + message.photo[-1].file_id + ", User: " + str(message.from_user.id))
+
+    await send_message_about_added_file(message.from_user.id, error_adding_file=error_adding_file)
 
 
 async def send_message_about_added_file(user_id: int, error_adding_file: bool = False,
