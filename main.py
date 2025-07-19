@@ -203,15 +203,6 @@ async def document_handler(message: types.Message):
 
     await send_message_about_added_file(message.from_user.id, error_adding_file=error_adding_file)
 
-    file = await bot.get_file(message.document.file_id)
-    file_path = file.file_path
-
-    print("---", file_path)
-
-    await bot.download_file(file_path, os.path.join(all_media_dir, file_name))
-    await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, file_name)))
-    # await send_report_to_mail([], os.path.join(all_media_dir, file_name), file_name)
-    os.remove(os.path.join(all_media_dir, file_name))
 
 
 @dp.message(F.photo)
@@ -270,9 +261,68 @@ async def send_message_about_added_file(user_id: int, error_adding_file: bool = 
     await bot.send_message(user_id, msg, reply_markup=keyboard)
 
 
+@dp.callback_query(F.data.startswith("send-letter"))
+async def send_letter(callback: types.CallbackQuery):
+    lang = await get_value_from_id(callback.from_user.id, fields="language")
+
+    boxes = (await get_value_from_id(callback.from_user.id, fields="boxes")).split()
+    files = file_ids[callback.from_user.id].copy()
+    if len(files) == 0:
+        await callback.message.answer(T_no_files_to_send[lang])
+        await callback.answer()
+        return False
+    if len(boxes) == 0:
+        await callback.message.reply(T_no_boxes_to_send[lang])
+        await callback.answer()
+        return False
+
+    file_ids[callback.from_user.id] = []
+
+    status = await callback.message.answer(T_preparing_to_send[lang])
+
+    file_patches = []
+    for q in files:
+        file = await bot.get_file(q[1])
+        file_path = file.file_path
+        file_patches.append((file_path, q[1]))
+
+    await status.edit_text(T_downloading_files[lang])
+
+    for q in file_patches:
+        await bot.download_file(q[0], os.path.join(all_media_dir, q[1]))
+
+    await status.edit_text(T_building_letter[lang])
+
+    file_patches_to_send = []
+    for q in file_patches:
+        file_patches_to_send.append(os.path.join(all_media_dir, q[1]))
+    file_names_to_send = []
+    for q in files:
+        file_names_to_send.append(q[0])
+
+    try:
+        await send_report_to_mail(boxes, file_patches_to_send, file_names_to_send, status, lang, callback.from_user)
+    except Exception as e:
+        await callback.message.answer(T_error_on_sending[lang])
+        await callback.answer()
+        logger.error(e)
+        return False
+
+    await status.edit_text(T_letter_has_been_sent[lang])
+
+    for q in file_patches_to_send:
+        os.remove(q)
+
+    await callback.answer()
+
+
 @dp.callback_query(F.data.startswith("delete-file-on-number"))
 async def delete_file_on_number(callback: types.CallbackQuery):
+    lang = await get_value_from_id(callback.from_user.id, fields="language")
     file_number = int(callback.data.split("_")[1])
+    if (callback.from_user.id not in file_ids.keys()) or (len(file_ids[callback.from_user.id]) < file_number):
+        await callback.answer(T_list_not_contains_this_number[lang].format(file_number), show_alert=True)
+        return False
     file_ids[callback.from_user.id].pop(file_number - 1)
     if len(file_ids[callback.from_user.id]) == 0:
         await delete_all_files(callback)

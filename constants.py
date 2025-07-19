@@ -99,6 +99,36 @@ T_all_files_have_been_deleted = {"ru": "Все файлы были удален�
 T_file_with_number_has_been_deleted = {"ru": "Файл с номером {} был удалён.",
                                        "en": "The file with the number {} was deleted."}
 
+T_no_files_to_send = {"ru": "Нет файлов для отправки",
+                      "en": "No files to send"}
+
+T_list_not_contains_this_number = {"ru": "Список не содержит файла с номером {}",
+                                   "en": "The list does not contain a file with the number {}"}
+
+T_no_boxes_to_send = {"ru": "Не указаны боксы для отправки. Введите номера боксов, сданных в стирку, после чего нажмите \"Отправить\" в этом сообщении",
+                      "en": "No boxes to send. Enter the numbers of the boxes sent to the laundry, and then click \"Send\" in this message"}
+
+T_preparing_to_send = {"ru": "Подготовка к отправке...",
+                       "en": "Preparing to send..."}
+
+T_downloading_files = {"ru": "Загрузка файлов...",
+                       "en": "Downloading files..."}
+
+T_building_letter = {"ru": "Формирование письма...",
+                     "en": "Building a letter..."}
+
+T_login_to_server = {"ru": "Подключение к серверу...",
+                     "en": "Connecting to the server..."}
+
+T_sending_letter = {"ru": "Отправка письма...",
+                    "en": "Sending a letter..."}
+
+T_letter_has_been_sent = {"ru": "Письмо успешно отправлено 🎉\nОжидайте уведомление о готовности",
+                          "en": "The letter has been sent 🎉\nPlease wait for a notification about readiness"}
+
+T_error_on_sending = {"ru": "Произошла ошибка при отправке письма, попробуйте ещё раз",
+                      "en": "An error occurred while sending the letter, try again"}
+
 T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot!\nЕсли что, он нужен для удобного отслеживания "
                                 "Ваших стирок. Для добавления к отслеживанию одного или нескольких контейнеров, "
                                 "отправьте сообщение с их номерами, разделёнными любыми символами (не числа). \nКогда "
