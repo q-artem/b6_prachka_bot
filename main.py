@@ -18,9 +18,8 @@ from constants import *
 from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, add_user
 from mail import send_report_to_mail
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s %(message)s")  # Включаем логирование, чтобы не пропустить важные сообщения
-dp = Dispatcher()  # Диспетчер
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+dp = Dispatcher()
 bot = Bot(token="1915599154:AAGHvs8tLqOY_gSIymWjzMjk0ooMeM2lbLk", default=DefaultBotProperties(parse_mode='html'))
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'documents')
@@ -177,14 +176,16 @@ async def cmd_start(message: types.Message):
 @dp.message(F.document)
 async def document_handler(message: types.Message):
     lang = await get_value_from_id(message.from_user.id, fields="language")
-    if ("." not in message.document.file_name) or message.document.file_name.split(".")[-1].lower() not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "xls", "xlsx", "csv", "ppt", "txt", "rtf", "tiff"]:
+    if (("." not in message.document.file_name) or message.document.file_name.split(".")[-1].lower()
+            not in ["pdf", "doc", "docx", "jpg", "jpeg", "png", "xls", "xlsx", "csv", "ppt", "txt", "rtf", "tiff"]):
         await incorrect_data_handler(message)
         return False
     if message.document.file_size > 1024 * 1024 * 5:
         await message.answer(T_exceeding_file_size[lang])
         return False
 
-    file_name = translit(message.document.file_name, 'ru', reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
+    file_name = translit(message.document.file_name, 'ru',
+                         reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
 
     if message.from_user.id not in file_ids.keys():
         file_ids[message.from_user.id] = []
@@ -200,7 +201,6 @@ async def document_handler(message: types.Message):
     await send_message_about_added_file(message.from_user.id, error_adding_file=error_adding_file)
 
 
-
 @dp.message(F.photo)
 async def photo_handler(message: types.Message):
     print(message.photo)
@@ -209,7 +209,8 @@ async def photo_handler(message: types.Message):
     file = await bot.get_file(message.photo[-1].file_id)
     file_path = file.file_path
     print(file_path)
-    photo_name = translit(message.photo[-1].file_id + ".jpg", 'ru', reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
+    photo_name = translit(message.photo[-1].file_id + ".jpg", 'ru',
+                          reversed=True).encode('ascii', errors='ignore').decode().replace(" ", "_")
 
     await bot.download_file(file_path, os.path.join(all_media_dir, photo_name))
     await message.reply_document(document=FSInputFile(path=os.path.join(all_media_dir, photo_name)))
@@ -217,7 +218,8 @@ async def photo_handler(message: types.Message):
     os.remove(os.path.join(all_media_dir, photo_name))
 
 
-async def send_message_about_added_file(user_id: int, error_adding_file: bool = False, deleted_file_on_number: bool = False, file_number: int = 0):
+async def send_message_about_added_file(user_id: int, error_adding_file: bool = False,
+                                        deleted_file_on_number: bool = False, file_number: int = 0):
     lang = await get_value_from_id(user_id, fields="language")
 
     msg = ""
@@ -229,7 +231,7 @@ async def send_message_about_added_file(user_id: int, error_adding_file: bool = 
         msg += T_added_new_file[lang]
     msg += "\n\n" + T_current_list_to_send[lang]
     msg += "\n" + T_boxes[lang] + " "
-    boxes = (await get_value_from_id(user_id, fields="boxes")).split()       # список
+    boxes = (await get_value_from_id(user_id, fields="boxes")).split()  # список
     if not boxes:
         msg += f"<i>{T_no_tracking_boxes[lang]}</i>\n"
     else:
@@ -245,12 +247,14 @@ async def send_message_about_added_file(user_id: int, error_adding_file: bool = 
     keyboard = types.InlineKeyboardMarkup(
         inline_keyboard=[[types.InlineKeyboardButton(text=T_send[lang],
                                                      callback_data="send-letter"),
-                         types.InlineKeyboardButton(text=T_delete_all_files[lang],
-                                                    callback_data="delete-files-all")],
-                         [types.InlineKeyboardButton(text=((T_delete_file[lang] + " ") if col_files < 3 else "") + str(q+1),
-                                                    callback_data="delete-file-on-number_" + str(q+1)) for q in range(0, min(5, col_files))],
-                         [types.InlineKeyboardButton(text=((T_delete_file[lang] + " ") if col_files - 5 < 3 else "") + str(q+1),
-                                                     callback_data="delete-file-on-number_" + str(q+1)) for q in range(5, min(10, col_files))]
+                          types.InlineKeyboardButton(text=T_delete_all_files[lang],
+                                                     callback_data="delete-files-all")],
+                         [types.InlineKeyboardButton(
+                             text=((T_delete_file[lang] + " ") if col_files < 3 else "") + str(q + 1),
+                             callback_data="delete-file-on-number_" + str(q + 1)) for q in range(0, min(5, col_files))],
+                         [types.InlineKeyboardButton(
+                             text=((T_delete_file[lang] + " ") if col_files - 5 < 3 else "") + str(q + 1),
+                             callback_data="delete-file-on-number_" + str(q + 1)) for q in range(5, min(10, col_files))]
                          ],
     )
 
@@ -452,6 +456,7 @@ async def text_to_numbers(data: str):
 async def main(_bot):  # Запуск процесса поллинга новых апдейтов
     await dp.start_polling(_bot)
 
+
 def start_bot():
     if os.listdir("documents"):
         logger.info("Deleting old files...")
@@ -460,5 +465,6 @@ def start_bot():
         logger.info("All old files deleted")
 
     asyncio.run(main(bot))
+
 
 start_bot()

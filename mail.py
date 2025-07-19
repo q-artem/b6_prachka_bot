@@ -12,7 +12,8 @@ from constants import T_login_to_server, T_sending_letter
 from datetime import datetime, timezone, timedelta
 
 
-async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_names: list[str], status: types.Message, lang: str, user: types.User):
+async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_names: list[str], status: types.Message,
+                              lang: str, user: types.User):
     from_email = "b6prachkabot@mail.ru"
     to_email = "Stodvalista.genshin@mail.ru"
     smtp_server = "smtp.mail.ru"
@@ -22,7 +23,8 @@ async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_na
 
     time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=3)))
     msg = MIMEMultipart()
-    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, "Чек " + time.strftime("%H:%M:%S") + "    Боксы: " + ", ".join(boxes[:10]) + ("..." if len(boxes) > 10 else "")
+    msg['From'], msg['To'], msg['Subject'] = from_email, to_email, "Чек " + time.strftime(
+        "%H:%M:%S") + "    Боксы: " + ", ".join(boxes[:10]) + ("..." if len(boxes) > 10 else "")
     text = ""
     hour = time.hour
     if 5 <= hour < 12:

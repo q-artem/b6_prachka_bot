@@ -58,7 +58,7 @@ T_incorrect_data = {"ru": "Отправленный тип файла не по�
                     "en": "The sent file type is not supported. Send a check as a photo or as a file"}
 
 T_exceeding_file_size = {"ru": "Размер файла не может превышать 5 МБ",
-                         "en": "File size cannot exceed 5 MB",}
+                         "en": "File size cannot exceed 5 MB", }
 
 T_cant_add_more_files = {"ru": "Нельзя добавить больше 10 файлов к письму",
                          "en": "You can't add more than 10 files to the letter"}
@@ -105,8 +105,9 @@ T_no_files_to_send = {"ru": "Нет файлов для отправки",
 T_list_not_contains_this_number = {"ru": "Список не содержит файла с номером {}",
                                    "en": "The list does not contain a file with the number {}"}
 
-T_no_boxes_to_send = {"ru": "Не указаны боксы для отправки. Введите номера боксов, сданных в стирку, после чего нажмите \"Отправить\" в этом сообщении",
-                      "en": "No boxes to send. Enter the numbers of the boxes sent to the laundry, and then click \"Send\" in this message"}
+T_no_boxes_to_send = {
+    "ru": "Не указаны боксы для отправки. Введите номера боксов, сданных в стирку, после чего нажмите \"Отправить\" в этом сообщении",
+    "en": "No boxes to send. Enter the numbers of the boxes sent to the laundry, and then click \"Send\" in this message"}
 
 T_preparing_to_send = {"ru": "Подготовка к отправке...",
                        "en": "Preparing to send..."}
