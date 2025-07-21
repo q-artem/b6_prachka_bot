@@ -91,10 +91,10 @@ T_delete_file = {"ru": "Удалить файл",
                  "en": "Delete file"}
 
 T_file_deleted = {"ru": "Файл удалён",
-                  "en": "File deleted"}
+                  "en": "File has been deleted"}
 
 T_all_files_have_been_deleted = {"ru": "Все файлы были удалены. Отправьте новый файл с чеком чтобы сформировать письмо",
-                                 "en": "All files have been deleted. Send a new file with a check to form a letter"}
+                                 "en": "All files have been deleted. Send a new check file to form a letter"}
 
 T_file_with_number_has_been_deleted = {"ru": "Файл с номером {} был удалён.",
                                        "en": "The file with the number {} was deleted."}
@@ -106,8 +106,10 @@ T_list_not_contains_this_number = {"ru": "Список не содержит ф�
                                    "en": "The list does not contain a file with the number {}"}
 
 T_no_boxes_to_send = {
-    "ru": "Не указаны боксы для отправки. Введите номера боксов, сданных в стирку, после чего нажмите \"Отправить\" в этом сообщении",
-    "en": "No boxes to send. Enter the numbers of the boxes sent to the laundry, and then click \"Send\" in this message"}
+    "ru": "Не указаны боксы для отправки. Введите номера боксов, сданных в стирку, "
+          "после чего нажмите \"Отправить\" в этом сообщении",
+    "en": "No boxes to send. Enter the numbers of the boxes sent to the laundry, "
+          "and then click \"Send\" in this message"}
 
 T_preparing_to_send = {"ru": "Подготовка к отправке...",
                        "en": "Preparing to send..."}
@@ -125,10 +127,16 @@ T_sending_letter = {"ru": "Отправка письма...",
                     "en": "Sending a letter..."}
 
 T_letter_has_been_sent = {"ru": "Письмо успешно отправлено 🎉\nОжидайте уведомление о готовности",
-                          "en": "The letter has been sent 🎉\nPlease wait for a notification about readiness"}
+                          "en": "The letter has been sent 🎉\nYou'll be notified when it's ready"}
 
 T_error_on_sending = {"ru": "Произошла ошибка при отправке письма, попробуйте ещё раз",
                       "en": "An error occurred while sending the letter, try again"}
+
+T_add_function_1 = {
+    "ru": "<b>Также после оплаты можно отправить боту чек (или несколько чеков), они вместе со списком "
+          "контейнеров будут автоматически пересланы на почту прачечной после вашего подтверждения</b>",
+    "en": "<b>After payment, you can also send the bot a check (or several checks), they along with the "
+          "list of containers will be automatically sent to the laundry's mail after your confirmation</b>"}
 
 T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot!\nЕсли что, он нужен для удобного отслеживания "
                                 "Ваших стирок. Для добавления к отслеживанию одного или нескольких контейнеров, "
@@ -138,7 +146,7 @@ T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot
                                 "1, 4, 42 -> контейнеры 1, 4 и 42\n"
                                 "6 8 10 7 -> контейнеры 6, 8, 10 и 7\n"
                                 "28 -> контейнер 28\n"
-                                "12,'+OR+1=1-- -> контейнеры 12 и 1\n\n"
+                                f"12,'+OR+1=1-- -> контейнеры 12 и 1\n\n{T_add_function_1['ru']}\n\n"
                                 "Для вывода инструкции на иных языках, нажмите кнопку:",
                         "to_lang": "Вывести инструкцию на русском"},
                  "en": {"mess": "Welcome to the B6PrachkaBot!\nIt is needed for convenient tracking of your laundry. "
@@ -148,6 +156,6 @@ T_hi_messages = {"ru": {"mess": "Добро пожаловать в B6PrachkaBot
                                 "\n\nExample:\n"
                                 "1, 4, 42 -> containers 1, 4, and 42\n"
                                 "6 8 10 7 -> containers 6, 8, 10, and 7.\n"
-                                "28 -> container 28\n\n"
+                                f"28 -> container 28\n\n{T_add_function_1['en']}\n\n"
                                 "To see the manual in other languages, please press the button:",
                         "to_lang": "Show the manual in English"}}
