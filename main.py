@@ -449,6 +449,8 @@ async def main(_bot):  # Запуск процесса поллинга новы
 
 
 def start_bot():
+    if not os.path.exists("./documents"):
+        os.mkdir("./documents")
     if os.listdir("documents"):
         logger.info("Deleting old files...")
         for q in os.listdir("documents"):
