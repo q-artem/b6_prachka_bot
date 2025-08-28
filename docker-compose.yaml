@@ -1,0 +1,11 @@
+services:
+  b6-prachka-bot:
+    container_name: b6-prachka-bot
+    build: "."
+    restart: "always"
+
+    volumes:
+      - b6-prachka-bot-database:/usr/src/app/data
+
+volumes:
+  b6-prachka-bot-database:

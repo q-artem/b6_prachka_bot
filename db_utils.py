@@ -1,9 +1,7 @@
 import random
 import sqlite3
 
-from aiogram import types
-
-bd = sqlite3.connect("users.sqlite")  # подключение к бд
+bd = sqlite3.connect("/usr/src/app/data/users.sqlite")  # подключение к бд
 
 
 async def get_value_from_id(idq, table="users", sign_column="id", fields="*", get_all=False, fetchone=True):
