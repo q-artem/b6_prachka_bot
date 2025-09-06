@@ -15,7 +15,8 @@ from datetime import datetime, timezone, timedelta
 async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_names: list[str], status: types.Message,
                               lang: str, user: types.User):
     from_email = "b6prachkabot@mail.ru"
-    to_email = "Stodvalista.genshin@mail.ru"
+    # to_email = "Stodvalista.genshin@mail.ru"
+    to_email = "prachka06@bk.ru"
     smtp_server = "smtp.mail.ru"
     port = 465
     username = "b6prachkabot@mail.ru"

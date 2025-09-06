@@ -1,8 +1,11 @@
 import random
 import sqlite3
+import logging
 
 bd = sqlite3.connect("/usr/src/app/data/users.sqlite")  # подключение к бд
 
+def to_str(*args):
+    return ", ".join([str(i) for i in args])
 
 async def get_value_from_id(idq, table="users", sign_column="id", fields="*", get_all=False, fetchone=True):
     debug_mess = ""
@@ -28,15 +31,15 @@ async def get_value_from_id(idq, table="users", sign_column="id", fields="*", ge
                                                                                  )).fetchall()
         if fields != "*" and len(fields.split(",")) == 1 and (not get_all):
             if data is None:
-                print(debug_mess + " >>> " + "None")
+                logging.log(logging.DEBUG, to_str(debug_mess + " >>> " + "None"))
                 return None
-            print(debug_mess + " >>> " + str(data[0]))
+            logging.log(logging.DEBUG, to_str(debug_mess + " >>> " + str(data[0])))
             return data[0]
         else:
-            print(debug_mess + " >>> " + str(data))
+            logging.log(logging.DEBUG, to_str(debug_mess + " >>> " + str(data)))
             return data
     except BaseException as e:
-        print("In", "getValueFromId", str(e) + "; request: " + debug_mess)
+        logging.log(logging.DEBUG, to_str("In", "getValueFromId", str(e) + "; request: " + debug_mess))
         return False
 
 
@@ -44,10 +47,10 @@ async def enter_bd_request(rq: str):
     try:
         data = bd.cursor().execute(rq).fetchall()
         bd.commit()
-        print("User bd request: " + rq + " >>> " + str(data))
+        logging.log(logging.DEBUG, to_str("User bd request: " + rq + " >>> " + str(data)))
         return True, data
     except BaseException as e:
-        print("In", "getValueFromId", e)
+        logging.log(logging.DEBUG, to_str("In", "getValueFromId", e))
         return False, e
 
 
@@ -57,13 +60,13 @@ async def write_value_from_id(idq, fields, value, table="users"):  # измен�
                                                                                              fields=fields,
                                                                                              ), (value, idq)).fetchone()
         bd.commit()
-        print("""UPDATE {table} SET {fields} = {value} WHERE id = {idq}""".format(table=table,
+        logging.log(logging.DEBUG, """UPDATE {table} SET {fields} = {value} WHERE id = {idq}""".format(table=table,
                                                                                   fields=fields,
                                                                                   value=value,
                                                                                   idq=idq))
         return data
     except BaseException as e:
-        print("In", "writeValueFromId", e)
+        logging.log(logging.DEBUG, to_str("In", "writeValueFromId", e))
         return False
 
 
@@ -72,7 +75,7 @@ async def add_user(idq, tb="users") -> bool:  # добавление польз�
         bd.cursor().execute(f"""INSERT INTO {tb} (id) VALUES (?)""", (idq,))
         bd.commit()
     except sqlite3.Error as e:
-        print("Ошибка записи в БД:", e)
+        logging.log(logging.DEBUG, to_str("Ошибка записи в БД:", e))
         return False
-    print("Добавлен новый пользователь, запись в БД завершена")
+    logging.log(logging.DEBUG, to_str("Добавлен новый пользователь, запись в БД завершена"))
     return True

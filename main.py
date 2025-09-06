@@ -18,9 +18,9 @@ from constants import *
 from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, add_user
 from mail import send_report_to_mail
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 dp = Dispatcher()
-bot = Bot(token="1915599154:AAGHvs8tLqOY_gSIymWjzMjk0ooMeM2lbLk", default=DefaultBotProperties(parse_mode='html'))
+bot = Bot(token="7780365472:AAGed4EVuWqsNF0eDzusnuwc7mBRehqbrDg", default=DefaultBotProperties(parse_mode='html'))
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'documents')
 
@@ -338,6 +338,9 @@ async def incorrect_data_handler(message: types.Message):
 
 @dp.message(F.text)
 async def message_handler(message: types.Message):
+    if (await get_value_from_id(message.from_user.id)) is None:
+        await message.answer("Please press /start to continue")
+        return
     if message.chat.id == 1722948286:
         if message.text.split(" ")[0].lower() == "bd":
             dd = await enter_bd_request(" ".join(message.text.split(" ")[1:]))
@@ -351,8 +354,10 @@ async def message_handler(message: types.Message):
                 for w in q:
                     l.append("<code>" + str(w) + "</code>")
                 lst.append("(" + ", ".join(l) + ")")
-            st = "[" + "\n".join(lst) + "]"
-            await message.answer(st)
+            # st = "[" + "\n".join(lst) + "]"
+            for q in range(0, len(lst), 50):
+                await message.answer("\n".join(lst[q:q + 50]))
+            # await message.answer(st)
         if message.text.split(" ")[0].lower() == "stopbot":
             keyboard = types.InlineKeyboardMarkup(
                 inline_keyboard=[[types.InlineKeyboardButton(text="да",
@@ -360,7 +365,7 @@ async def message_handler(message: types.Message):
             )
             await message.answer("Realno???", reply_markup=keyboard)
         if message.text.lower() == "бд на базу":
-            await message.answer_document(document=types.input_file.FSInputFile("users.sqlite"))
+            await message.answer_document(document=types.input_file.FSInputFile("usr/src/app/data/users2.sqlite"))
             return True
         spl = message.text.split(" ")
         if len(spl) > 2 and spl[0].lower() == "snd" and (
