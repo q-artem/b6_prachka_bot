@@ -147,7 +147,7 @@ async def cmd_start(message: types.Message):
         await message.answer(" /\n".join(T_record_has_been_created.values()))
         await bot.send_message(1722948286, "Добавлен: " + message.from_user.first_name + (
             (" " + message.from_user.last_name + ", @") if not message.from_user.last_name is None else ", @") + str(
-            message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)")
+            message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)",disable_notification=True)
     else:
         await message.answer(" /\n".join(T_record_already_created.values()))
 
