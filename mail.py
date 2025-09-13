@@ -29,21 +29,22 @@ async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_na
     text = ""
     hour = time.hour
     if 5 <= hour < 12:
-        text += "Доброе утро"
+        text += "Доброе утро!"
     elif 12 <= hour < 17:
-        text += "Добрый день"
+        text += "Добрый день!"
     elif 17 <= hour < 23:
-        text += "Добрый вечер"
+        text += "Добрый вечер!"
     else:
-        text += "Доброй ночи"
-    text += "! Это автоматически сформированное письмо.\n\nИмя пользователя в telegram: "
-    text += user.first_name + ((" " + user.last_name) if not user.last_name is None else "") + "\n"
+        text += "Доброй ночи!"
+    text += "<br>Это автоматически сформированное письмо. <br><u><b>Не отвечайте на него</b></u>, если нужно сообщить студенту о чем-либо, напишите о его боксе в чате прачечной, например \"бокс 54 нет чека\", и ему придет уведомление.<br><br>Имя пользователя в telegram: "
+    text += user.first_name + ((" " + user.last_name) if not user.last_name is None else "") + "<br>"
     if not user.username is None:
-        text += "Ссылка на профиль в telegram: https://t.me/" + user.username + "\n"
-    text += "ID пользователя: " + str(user.id) + "\n"
-    text += "Список боксов: " + ", ".join(boxes) + "\n\n\n"
-    text += "По вопросам работы бота обращайтесь к @j_artem в telegram."
-    msg.attach(MIMEText(text, 'plain'))
+        text += "Ссылка на профиль в telegram: https://t.me/" + user.username + "<br>"
+    text += "ID пользователя: " + str(user.id) + "<br>"
+    text += "Список боксов: " + ", ".join(boxes) + "<br>"
+    text += "Время и дата отправки: " + time.strftime("%d.%m.%Y %H:%M:%S") + "<br><br><br>"
+    text += "По вопросам работы бота обращайтесь к <a href='https://t.me/j_artem'>@j_artem</a> в telegram."
+    msg.attach(MIMEText(text, 'html'))
 
     for file_path, file_name in zip(file_patches, file_names):
         async with aopen(file_path, "rb") as file:
