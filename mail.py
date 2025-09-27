@@ -11,12 +11,15 @@ from aiogram.client.session.middlewares.request_logging import logger
 from constants import T_login_to_server, T_sending_letter
 from datetime import datetime, timezone, timedelta
 
+from constants import DEBUG
+
 
 async def send_report_to_mail(boxes: list[str], file_patches: list[str], file_names: list[str], status: types.Message,
                               lang: str, user: types.User):
     from_email = "b6prachkabot@mail.ru"
-    # to_email = "Stodvalista.genshin@mail.ru"
     to_email = "prachka06@bk.ru"
+    if DEBUG:
+        to_email = "Stodvalista.genshin@mail.ru"
     smtp_server = "smtp.mail.ru"
     port = 465
     username = "b6prachkabot@mail.ru"

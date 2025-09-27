@@ -1,8 +1,9 @@
 import random
 import sqlite3
 import logging
+from constants import DEBUG
 
-bd = sqlite3.connect("/usr/src/app/data/users.sqlite")  # подключение к бд
+bd = sqlite3.connect("/usr/src/app/data/users.sqlite" if not DEBUG else "usr/src/app/data/users.sqlite")  # подключение к бд
 
 def to_str(*args):
     return ", ".join([str(i) for i in args])

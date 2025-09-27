@@ -11,6 +11,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters.command import Command
 from aiogram import F
 import re
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from aiogram.types import FSInputFile
 
@@ -19,13 +20,17 @@ from db_utils import get_value_from_id, enter_bd_request, write_value_from_id, a
 from mail import send_report_to_mail
 
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+if DEBUG: [logger.info("DEBUG mode " * 10) for q in range(40)]
 dp = Dispatcher()
-bot = Bot(token="7780365472:AAGed4EVuWqsNF0eDzusnuwc7mBRehqbrDg", default=DefaultBotProperties(parse_mode='html'))
+bot = Bot(
+    token="" if not DEBUG else "",
+    default=DefaultBotProperties(parse_mode='html'))
 
 all_media_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'documents')
 
 file_ids: dict[int, list[(str, str)]] = dict()
 
+scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 @dp.callback_query(F.data.startswith("send-hi-mess-on"))
 async def sending_hi_mess(callback: types.CallbackQuery):
@@ -147,7 +152,8 @@ async def cmd_start(message: types.Message):
         await message.answer(" /\n".join(T_record_has_been_created.values()))
         await bot.send_message(1722948286, "Добавлен: " + message.from_user.first_name + (
             (" " + message.from_user.last_name + ", @") if not message.from_user.last_name is None else ", @") + str(
-            message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)",disable_notification=True)
+            message.from_user.username) + " (id: <code>" + str(message.from_user.id) + "</code>)",
+                               disable_notification=True)
     else:
         await message.answer(" /\n".join(T_record_already_created.values()))
 
@@ -249,7 +255,21 @@ async def send_message_about_added_file(user_id: int, error_adding_file: bool = 
                          ],
     )
 
+    try:
+        scheduler.add_job(send_email_notification, 'interval', minutes=5, args=[user_id], id=str(user_id))
+    except:
+        pass
+
     await bot.send_message(user_id, msg, reply_markup=keyboard)
+
+
+async def send_email_notification(user_id):
+    lang = await get_value_from_id(user_id, fields="language")
+    try:
+        scheduler.remove_job(str(user_id))
+    except:
+        pass
+    await bot.send_message(user_id, T_email_notification[lang])
 
 
 @dp.callback_query(F.data.startswith("send-letter"))
@@ -302,9 +322,19 @@ async def send_letter(callback: types.CallbackQuery):
     await status.edit_text(T_letter_has_been_sent[lang])
 
     for q in file_patches_to_send:
-        os.remove(q)
+        try:
+            os.remove(q)
+        except FileNotFoundError as e:
+            logger.error(e)
+
+    # только если отправилось
+    try:
+        scheduler.remove_job(str(callback.from_user.id))
+    except:
+        pass
 
     await callback.answer()
+    return None
 
 
 @dp.callback_query(F.data.startswith("delete-file-on-number"))
@@ -450,6 +480,7 @@ async def text_to_numbers(data: str):
 
 
 async def main(_bot):  # Запуск процесса поллинга новых апдейтов
+    scheduler.start()
     await dp.start_polling(_bot)
 
 

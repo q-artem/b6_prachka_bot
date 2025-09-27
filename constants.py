@@ -1,3 +1,4 @@
+DEBUG = 0
 default_lang = "ru"
 # link_to_channel = "https://t.me/B6Laundrytest/"
 link_to_channel = "https://t.me/B6Laundry/"
@@ -131,6 +132,9 @@ T_letter_has_been_sent = {"ru": "Письмо успешно отправлен�
 
 T_error_on_sending = {"ru": "Произошла ошибка при отправке письма, попробуйте ещё раз",
                       "en": "An error occurred while sending the letter, try again"}
+
+T_email_notification = {"ru": "Напоминание: Вы точно не забыли отправить письмо?",
+                        "en": "Didn't you forget to send an email?"}
 
 T_add_function_1 = {
     "ru": "<b>Также после оплаты можно отправить боту чек (или несколько чеков), они вместе со списком "
