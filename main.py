@@ -256,7 +256,7 @@ async def send_message_about_added_file(user_id: int, error_adding_file: bool = 
     )
 
     try:
-        scheduler.add_job(send_email_notification, 'interval', minutes=5, args=[user_id], id=str(user_id))
+        scheduler.add_job(send_email_notification, 'interval', minutes=1, args=[user_id], id=str(user_id))
     except:
         pass
 
